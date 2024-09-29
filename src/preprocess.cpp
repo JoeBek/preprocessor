@@ -11,6 +11,9 @@ public:
   // constructor
   ZedImageSubscriber() : Node("zed_image_subscriber")
   {
+
+     publisher_ = this->create_publisher<sensor_msgs::msg::Image>("processed_image", 10);
+
     // create topic subscription
     subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
       "/zed/zed_node/left/image_rect_color", 10,
@@ -24,6 +27,9 @@ private:
     try
     {
       cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
+      cv::Mat edges;
+      cv::Canny(image, edges, 100, 200);
+      publishProcessedImage(edges);
       cv::imshow("ZED Left Image", image);
       cv::waitKey(1);
     }
@@ -33,7 +39,18 @@ private:
     }
   }
 
+    void publishProcessedImage(const cv::Mat& processed_image)
+  {
+    std_msgs::msg::Header header;
+    header.stamp = this->now();
+    header.frame_id = "camera_frame"; // Set appropriate frame_id
+
+    sensor_msgs::msg::Image::SharedPtr output_msg = cv_bridge::CvImage(header, "bgr8", processed_image).toImageMsg();
+    publisher_->publish(*output_msg);
+  }
+
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_;
 };
 
 int main(int argc, char * argv[])
