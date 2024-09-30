@@ -30,7 +30,7 @@ private:
       cv::Mat edges;
       cv::Canny(image, edges, 100, 200);
       publishProcessedImage(edges);
-      cv::imshow("ZED Left Image", image);
+      cv::imshow("ZED Left Image", edges);
       cv::waitKey(1);
     }
     catch (cv_bridge::Exception& e)
